@@ -1,1 +1,407 @@
+```html
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e16">
+<title>ONE ON ONE | AI対話バトル</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#0b0e16;
+  --panel:#171d2b;
+  --line:#2a3346;
+  --text:#edf2ff;
+  --muted:#91a0b8;
+  --blue:#59a7ff;
+  --red:#ff5d73;
+  --gold:#ffd166;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:radial-gradient(ellipse at 50% -20%,#263554,transparent 55%),var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  min-height:100dvh;
+}
+button,input,textarea,select { font:inherit; }
+button { cursor:pointer; }
+.app {
+  max-width:950px;
+  margin:auto;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-height:100dvh;
+}
+.top { display:flex; justify-content:space-between; align-items:center; }
+.brand { font-weight:900; letter-spacing:.1em; }
+.brand span { color:var(--gold); }
+.panel {
+  background:linear-gradient(145deg,#171d2b,#111622);
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:14px;
+  box-shadow:0 12px 32px #0002;
+}
+.setup { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.field { display:flex; flex-direction:column; gap:6px; }
+.field label,.tiny { font-size:12px; color:var(--muted); }
+input,select,textarea {
+  width:100%;
+  background:#0c111c;
+  border:1px solid #354057;
+  color:var(--text);
+  border-radius:11px;
+  padding:11px;
+  outline:none;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--blue); }
+.wide { grid-column:1/-1; }
+.btn {
+  border:0;
+  border-radius:12px;
+  padding:12px 15px;
+  font-weight:800;
+  background:var(--blue);
+  color:#081321;
+}
+.secondary { background:#222b3d; color:var(--text); border:1px solid #3a455c; }
+.danger { background:#4b202d; color:#ffdce2; border:1px solid #763344; }
+.btn:disabled { opacity:.45; }
+.roster { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.fighter {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:11px;
+  border-radius:13px;
+  background:#101724;
+  border:1px solid var(--line);
+}
+.avatar {
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  font-size:14px;
+  font-weight:900;
+  flex-shrink:0;
+}
+.you { background:#183653; color:#8ac7ff; }
+.foeAvatar { background:#4b202d; color:#ffb0bd; }
+.fighter strong { display:block; font-size:14px; }
+.fighter small { display:block; color:var(--muted); font-size:11px; margin-top:3px; }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+.stat { padding:9px; background:#0f1521; border-radius:11px; text-align:center; }
+.stat label { font-size:11px; color:var(--muted); display:block; }
+.stat b { font-size:20px; }
+.scenario { border-left:3px solid var(--gold); padding:3px 0 3px 12px; }
+.scenario h2 { font-size:17px; margin:5px 0; }
+.scenario p { margin:0; line-height:1.6; color:#cbd5e8; font-size:13px; }
+.clockrow {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  color:var(--muted);
+  margin:12px 0;
+}
+.clock { font-weight:900; font-size:19px; color:var(--gold); }
+.clock.danger { color:var(--red); animation:pulse .65s infinite alternate; }
+.log {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-height:34vh;
+  overflow:auto;
+  padding:2px;
+  scroll-behavior:smooth;
+}
+.bubble {
+  max-width:88%;
+  padding:11px 13px;
+  border-radius:14px;
+  line-height:1.55;
+  font-size:14px;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.bubble.foe {
+  align-self:flex-start;
+  background:#25202b;
+  border:1px solid #50303c;
+  border-bottom-left-radius:4px;
+}
+.bubble.you {
+  align-self:flex-end;
+  background:#172a40;
+  border:1px solid #2c527a;
+  border-bottom-right-radius:4px;
+}
+.who {
+  display:block;
+  font-size:10px;
+  font-weight:900;
+  margin-bottom:5px;
+  color:var(--muted);
+}
+.bubble.you .who { color:#80c2ff; }
+.bubble.foe .who { color:#ff8d9e; }
+.inputarea { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.inputmeta { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+textarea { resize:vertical; min-height:82px; max-height:190px; line-height:1.5; }
+.warning {
+  display:none;
+  color:#ffb5c0;
+  background:#3a1924;
+  border:1px solid #733344;
+  border-radius:10px;
+  padding:9px;
+  font-size:12px;
+  white-space:pre-wrap;
+}
+.warning.show { display:block; }
+.actions { display:flex; gap:8px; }
+.actions .btn { flex:1; }
+.meterwrap {
+  position:sticky;
+  bottom:0;
+  background:#0b0e16ed;
+  backdrop-filter:blur(10px);
+  padding:9px 0 2px;
+}
+.meterlabels {
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:7px;
+}
+.meter {
+  height:16px;
+  border-radius:99px;
+  background:#43202b;
+  overflow:hidden;
+  display:flex;
+  border:1px solid #46516a;
+}
+.meter .player {
+  height:100%;
+  width:50%;
+  background:linear-gradient(90deg,#2673c7,#72c7ff);
+  transition:width .7s;
+  box-shadow:0 0 16px #4caaff77;
+}
+.meter .enemy {
+  height:100%;
+  flex:1;
+  background:linear-gradient(90deg,#ff7185,#b52d4a);
+}
+.meter.panic { animation:heart .65s infinite; }
+.hint { text-align:center; color:var(--muted); font-size:10px; margin-top:5px; }
+.hidden { display:none!important; }
+.result { text-align:center; padding:18px 10px; }
+.grade { font-size:48px; font-weight:1000; color:var(--gold); }
+.result p { line-height:1.7; color:#cbd5e8; white-space:pre-wrap; }
+.foot { text-align:center; font-size:10px; color:#758198; line-height:1.5; }
+@keyframes pulse { to { opacity:.55; } }
+@keyframes heart {
+  0%,100% { transform:scaleX(1); }
+  25% { transform:scaleX(1.015); }
+  40% { transform:scaleX(1); }
+}
+@media(min-width:740px) {
+  .app { padding-top:22px; }
+  .setup { grid-template-columns:repeat(3,1fr); }
+  .wide { grid-column:auto; }
+  .wide.api { grid-column:span 2; }
+  .log { max-height:40vh; }
+}
+@media(max-width:380px) {
+  .app { padding:9px; }
+  .panel { padding:11px; }
+  .bubble { max-width:95%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand">⚔ ONE <span>ON ONE</span> <span style="color:var(--muted);font-weight:500;letter-spacing:0">/ AI対話バトル</span></div>
+    <button id="toggle" class="btn secondary" style="padding:8px 10px;font-size:12px">⚙ 設定</button>
+  </div>
+
+  <section id="settings" class="panel">
+    <div class="setup">
+      <div class="field wide api">
+        <label>Groq APIキー（端末内保存）</label>
+        <input id="key" type="password" placeholder="gsk_..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>AIモデル</label>
+        <select id="model">
+          <option value="openai/gpt-oss-120b">GPT OSS 120B / 高性能</option>
+          <option value="openai/gpt-oss-20b">GPT OSS 20B / 高速</option>
+          <option value="qwen/qwen3.8-27b">Qwen 3.8 27B</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>難易度</label>
+        <select id="difficulty">
+          <option value="easy">EASY</option>
+          <option value="normal" selected>NORMAL</option>
+          <option value="hard">HARD</option>
+          <option value="hell">HELL</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>対話スタイル</label>
+        <select id="mode">
+          <option value="mixed">ミックス</option>
+          <option value="debate">議論・説得</option>
+          <option value="roleplay">なりきり・交渉</option>
+          <option value="empathy">共感・信頼</option>
+          <option value="comedy">機転・ユーモア</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>文字数上限</label>
+        <select id="limit">
+          <option value="0">制限なし</option>
+          <option value="80">80文字</option>
+          <option value="140" selected>140文字</option>
+          <option value="240">240文字</option>
+          <option value="400">400文字</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>1ターンの制限時間</label>
+        <select id="seconds">
+          <option value="0">制限なし</option>
+          <option value="20">20秒</option>
+          <option value="30" selected>30秒</option>
+          <option value="45">45秒</option>
+          <option value="60">60秒</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>行動ルール</label>
+        <select id="rule">
+          <option value="free">自由行動</option>
+          <option value="polite">礼儀・誠実さ重視</option>
+          <option value="logic">論理性重視</option>
+          <option value="empathy">共感重視</option>
+          <option value="noattack">人格攻撃禁止</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>最大ターン数</label>
+        <select id="turns">
+          <option>4</option><option selected>6</option><option>8</option><option>10</option>
+        </select>
+      </div>
+      <div class="field wide">
+        <button id="start" class="btn" style="width:100%">対戦開始 ▶</button>
+      </div>
+    </div>
+    <p class="tiny">APIキーはこのブラウザ内に保存されます。共有端末では保存しないでください。</p>
+    <div id="setupWarning" class="warning"></div>
+  </section>
+
+  <section id="game" class="hidden">
+    <div class="roster">
+      <div class="fighter"><div class="avatar you">YOU</div><div><strong>あなた</strong><small>PLAYER / 挑戦者</small></div></div>
+      <div class="fighter"><div class="avatar foeAvatar">AI</div><div><strong id="enemyName">対戦相手</strong><small>RIVAL / 対話AI</small></div></div>
+    </div>
+    <div class="panel" style="margin-top:10px">
+      <div class="scenario">
+        <div id="type" class="tiny">SCENARIO</div>
+        <h2 id="title"></h2>
+        <p id="desc"></p>
+      </div>
+      <div class="stats" style="margin-top:12px">
+        <div class="stat"><label>説得力</label><b id="pers">50</b></div>
+        <div class="stat"><label>信頼</label><b id="trust">50</b></div>
+        <div class="stat"><label>目的達成</label><b id="goal">0</b></div>
+      </div>
+      <div class="clockrow"><span id="turn">TURN 1</span><span>残り時間 <b id="clock" class="clock">30</b></span></div>
+      <div id="log" class="log" aria-live="polite"></div>
+      <div id="busy" class="tiny hidden">◌ AIが状況を判断中…</div>
+      <div class="inputarea">
+        <div class="inputmeta"><span>あなたの返答</span><span id="count">0 / 140</span></div>
+        <textarea id="reply" placeholder="返答を入力…"></textarea>
+        <div id="warning" class="warning"></div>
+        <div class="actions">
+          <button id="send" class="btn">返答する ↗</button>
+          <button id="giveup" class="btn danger" style="flex:0 0 auto">降参</button>
+        </div>
+      </div>
+    </div>
+    <div class="meterwrap">
+      <div class="meterlabels"><span style="color:var(--blue)">● あなた <b id="pp">50</b>%</span><span style="color:var(--red)">相手 <b id="ep">50</b>% ●</span></div>
+      <div id="meter" class="meter"><div id="pm" class="player"></div><div class="enemy"></div></div>
+      <div id="hint" class="hint">対話の流れがここに反映される</div>
+    </div>
+  </section>
+
+  <section id="result" class="panel result hidden">
+    <div class="tiny">MATCH RESULT</div><div id="grade" class="grade">B</div>
+    <h2 id="resultTitle"></h2><p id="resultText"></p>
+    <div class="stats">
+      <div class="stat"><label>説得力</label><b id="fp"></b></div>
+      <div class="stat"><label>信頼</label><b id="ft"></b></div>
+      <div class="stat"><label>総合点</label><b id="fs"></b></div>
+    </div>
+    <button id="again" class="btn" style="width:100%;margin-top:14px">次の対戦へ ↻</button>
+  </section>
+  <div class="foot">ONE ON ONE · GROQ API · 対話の評価はゲーム内スコアです。</div>
+</div>
+
+<script>
+(()=>{"use strict";
+const $=id=>document.getElementById(id);
+const allowed=["openai/gpt-oss-120b","openai/gpt-oss-20b","qwen/qwen3.8-27b"];
+const scenarios=[
+{title:"閉店寸前のカフェ",type:"交渉・信頼",desc:"常連のあなたは、赤字を理由に閉店を決めた店主と話している。店を続ける道を一緒に探そう。",name:"頑固な店主",goal:"現実的な継続案を検討してもらう",opener:"気持ちはありがたい。でも赤字は気合いじゃ埋まらない。もう決めたことだよ。"},
+{title:"チームの危機",type:"議論・説得",desc:"発表まであと1日。リーダーはあなたの新しい提案を危険だとして却下しようとしている。",name:"慎重なリーダー",goal:"リスクを認めつつ提案の価値を示す",opener:"失敗したら全員に迷惑がかかる。今から新しい案を試すのは無責任じゃないか？"},
+{title:"誤解された友人",type:"共感・関係修復",desc:"友人はあなたが約束を忘れたと思い込み怒っている。言い訳だけでなく関係を修復しよう。",name:"怒っている友人",goal:"誤解を解き、信頼を回復する",opener:"楽しみにしてたのに、結局どうでもよかったんだろ？もう期待しないよ。"},
+{title:"無理難題の依頼",type:"交渉・境界線",desc:"同僚が締め切り直前に大量の仕事を押しつけようとしている。関係を壊さず断ろう。",name:"押しの強い同僚",goal:"限界を伝え、現実的な代替案を示す",opener:"君ならすぐ終わるって。こっちは困ってるんだから少しくらい助けてよ。"},
+{title:"王の謁見",type:"ロールプレイ・機転",desc:"王国の危機を伝え、疑り深い王から協力を得たい。言葉と機転で道を切り開こう。",name:"疑り深い王",goal:"王の警戒を解き、協力を得る",opener:"見知らぬ旅人を信じろと言うのか？お前の言葉を裏付けるものは何だ。"},
+{title:"炎上する企画会議",type:"論理・冷静さ",desc:"あなたの企画が会議で酷評されている。冷静に指摘を整理し、価値を示そう。",name:"辛辣な審査員",goal:"批判に具体的に答え、再検討の価値を示す",opener:"率直に言おう。目新しさも根拠もない。これを通す理由が見当たらない。"},
+{title:"謎の取引",type:"心理戦・観察",desc:"相手は情報を隠したまま取引を持ちかけている。条件を聞き出し、不利な合意を避けよう。",name:"食えない交渉人",goal:"条件を明らかにし、合意点を探す",opener:"今ここで承諾するなら、君にとって悪くない話にしてあげよう。"},
+{title:"最悪のデート",type:"機転・ユーモア",desc:"遅刻して店も予約できていない。相手は不機嫌。誠実さと機転で空気を立て直そう。",name:"不機嫌な相手",goal:"謝罪し、相手が楽しめる代替案を出す",opener:"遅刻して予約もなし？今日を楽しみにしてた私が馬鹿みたいだね。"}
+];
+const diff={easy:{strength:.7,mult:1.25},normal:{strength:1,mult:1},hard:{strength:1.25,mult:.85},hell:{strength:1.5,mult:.7}};
+let s=null,timer=null,left=0,busy=false,ended=false;
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+function showWarn(t){$("warning").textContent=t;$("warning").classList.add("show")}
+function clearWarn(){$("warning").textContent="";$("warning").classList.remove("show")}
+function bubble(who,text){const d=document.createElement("div");d.className="bubble "+who;const w=document.createElement("span");w.className="who";w.textContent=who==="you"?"YOU / あなた":s.scenario.name;d.append(w,document.createTextNode(text));$("log").append(d);$("log").scrollTop=$("log").scrollHeight}
+function update(){["pers","trust","goal"].forEach((id,i)=>$(id).textContent=Math.round([s.pers,s.trust,s.goal][i]));let p=Math.round(clamp(s.meter,0,100));$("pp").textContent=p;$("ep").textContent=100-p;$("pm").style.width=p+"%";$("meter").classList.toggle("panic",p<27);$("hint").textContent=p>70?"主導権を握っている！":p>55?"あなたがやや優勢":p>=45?"互角。次の一手が勝負":p>=30?"相手に押されている…":"危険！追い詰められている"}
+function count(){let n=[...$("reply").value].length,max=+$("limit").value;$("count").textContent=n+" / "+(max||"∞");$("count").style.color=max&&n>max?"var(--red)":"var(--muted)"}
+function stopTimer(){if(timer)clearInterval(timer);timer=null}
+function startTimer(){stopTimer();let n=+$("seconds").value;if(!n){left=0;$("clock").textContent="∞";return}left=n;clock();timer=setInterval(()=>{if(busy||ended)return;left--;clock();if(left<=0){stopTimer();s.meter=clamp(s.meter-7,0,100);update();showWarn("時間切れ！メーターにペナルティ。内容を確認して送信できます。")}},1000)}
+function clock(){$("clock").textContent=left;$("clock").classList.toggle("danger",left<=8&&left>0)}
+async function call(messages,temp){let key=$("key").value.trim();if(!key)throw Error("Groq APIキーを設定してください。");let model=$("model").value;if(!allowed.includes(model))model="openai/gpt-oss-120b";let r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model,messages,temperature:temp??.7,max_tokens:800})});let data=await r.json();if(!r.ok){let m=data?.error?.message||"HTTP "+r.status;if(/model.*(does not exist|not found|decommission|access)/i.test(m))m+="。設定からGPT OSS 20Bなど別モデルを選んでください。";throw Error(m)}let out=data?.choices?.[0]?.message?.content;if(!out)throw Error("AIの返答が空でした。");return out}
+function parseJson(raw){let clean=raw.replace(/```json|```/g,"").trim(),a=clean.indexOf("{"),b=clean.lastIndexOf("}");if(a<0||b<a)throw Error("AIの評価JSONを読み取れません。もう一度送信してください。");return JSON.parse(clean.slice(a,b+1))}
+function rule(){return ({free:"自由行動",polite:"礼儀と誠実さを重視し、失礼な発言は減点",logic:"論理性、根拠、具体性を重視",empathy:"感情理解と共感を重視",noattack:"人格攻撃は禁止。侮辱は大幅減点"})[$("rule").value]}
+function mode(){return ({mixed:"議論・交渉・共感・機転を場面に合わせて混ぜる",debate:"論理、根拠、反論への応答を重視",roleplay:"役柄と世界観を保つロールプレイ・交渉",empathy:"傾聴、共感、信頼回復を重視",comedy:"機転と場に合ったユーモアを重視"})[$("mode").value]}
+async function begin(){clearWarn();$("setupWarning").classList.remove("show");if(!$("key").value.trim()){$("setupWarning").textContent="Groq APIキーを入力してください。";$("setupWarning").classList.add("show");return}try{localStorage.setItem("oon_key",$("key").value.trim());localStorage.setItem("oon_model",$("model").value)}catch(e){}s={scenario:scenarios[Math.floor(Math.random()*scenarios.length)],turn:0,max:+$("turns").value,meter:50,pers:50,trust:50,goal:0,history:[]};ended=false;$("settings").classList.add("hidden");$("game").classList.remove("hidden");$("result").classList.add("hidden");$("log").innerHTML="";$("type").textContent="SCENARIO / "+s.scenario.type;$("title").textContent=s.scenario.title;$("desc").textContent=s.scenario.desc;$("enemyName").textContent=s.scenario.name;update();bubble("foe",s.scenario.opener);s.history.push({role:"assistant",content:s.scenario.opener});$("reply").value="";count();$("turn").textContent="TURN 1 / "+s.max;startTimer()}
+async function send(){if(busy||ended)return;clearWarn();let text=$("reply").value.trim(),max=+$("limit").value;if(!text){showWarn("返答を入力してください。");return}if(max&&[...text].length>max){showWarn("文字数オーバー："+[...text].length+"文字 / 上限"+max+"文字。短くしてください。");return}stopTimer();s.turn++;s.history.push({role:"user",content:text});bubble("you",text);$("reply").value="";count();busy=true;$("busy").classList.remove("hidden");$("send").disabled=true;$("reply").disabled=true;$("turn").textContent="TURN "+s.turn+" / "+s.max;
+try{let d=diff[$("difficulty").value];let system="あなたは対話バトルの対戦相手兼公平な審判。日本語で自然に返答。シナリオ:"+s.scenario.title+"。状況:"+s.scenario.desc+"。相手:"+s.scenario.name+"。プレイヤー目標:"+s.scenario.goal+"。難易度係数:"+d.strength+"。スタイル:"+mode()+"。ルール:"+rule()+"。現在値:説得力"+s.pers+",信頼"+s.trust+",目的達成"+s.goal+",主導権"+Math.round(s.meter)+".ターン"+s.turn+"/"+s.max+"。直前のユーザー発言を具体性、相手理解、根拠、目標への前進で評価し、同じ基準を保つ。メーターを気まぐれに変えない。JSONのみで返す: {\"reply\":\"相手の返答2〜4文\",\"persuasion_delta\":0,\"trust_delta\":0,\"goal_delta\":0,\"meter_delta\":0,\"quality\":\"評価を短い1文\",\"rule_violation\":false,\"finish\":false,\"finish_reason\":\"\"}。deltaは今回の発言への評価で整数。ルール違反ならrule_violation true。通常は最大ターンまで続ける。";
+let ev=parseJson(await call([{role:"system",content:system},...s.history.slice(-12)],.7));let m=d.mult;s.pers=clamp(s.pers+(+ev.persuasion_delta||0)*m,0,100);s.trust=clamp(s.trust+(+ev.trust_delta||0)*m,0,100);s.goal=clamp(s.goal+(+ev.goal_delta||0)*m,0,100);s.meter=clamp(s.meter+(+ev.meter_delta||0)*m-(ev.rule_violation?5:0),0,100);let response=String(ev.reply||"……そう簡単にはいかないよ。");s.history.push({role:"assistant",content:response});bubble("foe",response);if(ev.quality){let q=document.createElement("div");q.className="tiny";q.style.textAlign="right";q.textContent="審判メモ："+ev.quality;$("log").append(q)}update();if(ev.rule_violation)showWarn("ルール違反判定：次の発言ではルールに注意しよう。");if(ev.finish||s.turn>=s.max||s.goal>=100||s.meter<=0||s.meter>=100){await finish(ev.finish_reason||"対話の決着がついた");return}startTimer()
+}catch(e){s.turn=Math.max(0,s.turn-1);s.history.pop();showWarn("APIエラー："+e.message+"\n入力は復元しました。設定でモデルを変更することもできます。");$("reply").value=text;count();startTimer()}finally{busy=false;$("busy").classList.add("hidden");$("send").disabled=ended;$("reply").disabled=ended}}
+async function finish(reason){if(ended)return;ended=true;stopTimer();$("send").disabled=true;$("reply").disabled=true;const score=Math.round(clamp(s.pers*.25+s.trust*.2+s.goal*.35+s.meter*.2,0,100));let ending="";try{ending=await call([{role:"system",content:"あなたは対話バトルのゲームマスター。スコアと会話を踏まえ、日本語で3〜6文のエンディングを書く。点数に正直に、成功/部分成功/失敗、相手の心境や状況の変化、余韻を描写。過剰に褒めない。"}, {role:"user",content:"シナリオ:"+s.scenario.title+"\n目標:"+s.scenario.goal+"\n終了理由:"+reason+"\n難易度:"+$("difficulty").value+"\n説得力:"+s.pers+"/100 信頼:"+s.trust+"/100 目的達成:"+s.goal+"/100 主導権:"+s.meter+"/100 総合点:"+score+"/100\n会話:\n"+s.history.map(x=>(x.role==="user"?"あなた":"相手")+": "+x.content).join("\n")+"\nこの結果のエンディングを書いてください。"}],.8)}catch(e){ending="対話は終了した。"+reason+"。総合スコア"+score+"点。"+(score>=65?"あなたの言葉は相手に一定の影響を与えた。":"相手の心を動かすには、別の伝え方が必要だったようだ。")}$("grade").textContent=score>=90?"S":score>=80?"A":score>=65?"B":score>=50?"C":score>=35?"D":"E";$("resultTitle").textContent=score>=80?"見事な勝利！":score>=60?"優勢で終了":score>=40?"惜しい結果":"相手に主導権を握られた";$("resultText").textContent=ending;$("fp").textContent=Math.round(s.pers);$("ft").textContent=Math.round(s.trust);$("fs").textContent=score;$("result").classList.remove("hidden");$("result").scrollIntoView({behavior:"smooth",block:"start"})}
+$("start").onclick=begin;$("send").onclick=send;$("reply").oninput=count;$("reply").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey&&innerWidth>600){e.preventDefault();send()}};$("giveup").onclick=()=>{if(confirm("降参して結果を表示しますか？"))finish("プレイヤーが降参した")};$("again").onclick=()=>{$("game").classList.add("hidden");$("result").classList.add("hidden");$("settings").classList.remove("hidden");clearWarn();scrollTo({top:0,behavior:"smooth"})};$("toggle").onclick=()=>$("settings").classList.toggle("hidden");try{let k=localStorage.getItem("oon_key"),m=localStorage.getItem("oon_model");if(k)$("key").value=k;if(m&&allowed.includes(m))$("model").value=m}catch(e){}count();
+})();
+</script></body></html>'''
+path = "/mnt/data/RPGfor1ON1.html"
+with open(path, "w", encoding="utf-8") as f:
+    f.write(html)
+print(f"作成完了: {path}\nHTMLサイズ: {len(html):,} 文字")
 
